@@ -1,0 +1,263 @@
+/* Custom CSS for Financial Education Platform */
+
+:root {
+    --primary-color: #2563eb;
+    --secondary-color: #16a34a;
+    --accent-color: #f59e0b;
+    --danger-color: #dc2626;
+    --success-color: #059669;
+    --warning-color: #d97706;
+    --info-color: #0284c7;
+    --light-bg: #f8fafc;
+    --border-color: #e2e8f0;
+}
+
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #334155;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: var(--primary-color) !important;
+}
+
+/* Country Selector Styles */
+.btn-outline-secondary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Financial Instruments Cards */
+.instrument-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid transparent;
+}
+
+.instrument-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.equity-category {
+    border-left-color: var(--primary-color);
+}
+
+.debt-category {
+    border-left-color: var(--success-color);
+}
+
+.derivatives-category {
+    border-left-color: var(--warning-color);
+}
+
+.money-market-category {
+    border-left-color: var(--info-color);
+}
+
+.forex-category {
+    border-left-color: var(--danger-color);
+}
+
+/* Risk Level Badges */
+.risk-very-low {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+}
+
+.risk-low {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+}
+
+.risk-medium,
+.risk-medium-to-high {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+}
+
+.risk-high {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+}
+
+.risk-very-high {
+    background-color: #fecaca !important;
+    color: #7f1d1d !important;
+}
+
+/* Age Group Cards */
+.age-group-20 {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    border: 1px solid #93c5fd;
+}
+
+.age-group-30 {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    border: 1px solid #86efac;
+}
+
+.age-group-45 {
+    background: linear-gradient(135deg, #fed7aa, #fdba74);
+    border: 1px solid #fb923c;
+}
+
+/* Occupation Cards */
+.occupation-salaried {
+    background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+    border: 1px solid #c4b5fd;
+}
+
+.occupation-self-employed {
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    border: 1px solid #a5b4fc;
+}
+
+/* Savings Schemes Table */
+.table-hover tbody tr:hover {
+    background-color: var(--light-bg);
+}
+
+.tenure-badge {
+    font-size: 0.875rem;
+}
+
+/* Tax Regulations */
+.tax-regime-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tax-regime-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tax-rate-badge {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.bg-orange {
+    background-color: #f97316 !important;
+    color: white !important;
+}
+
+/* Calculator Sections */
+.calculator-card {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border: 1px solid var(--border-color);
+}
+
+/* Loading States */
+.loading-placeholder {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .instrument-card {
+        margin-bottom: 1rem;
+    }
+    
+    .fs-4 {
+        font-size: 1.1rem !important;
+    }
+}
+
+/* Custom Button Styles */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+/* Footer Styles */
+footer {
+    background-color: var(--light-bg) !important;
+}
+
+footer a {
+    color: #64748b;
+    transition: color 0.2s ease;
+}
+
+footer a:hover {
+    color: var(--primary-color);
+}
+
+/* Search Bar */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+
+/* Navigation Tabs */
+.nav-tabs .nav-link.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.nav-tabs .nav-link {
+    color: #64748b;
+    border: 1px solid transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--primary-color);
+    border-color: #e2e8f0;
+}
+
+/* Card Enhancements */
+.card {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: var(--light-bg);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+}
+
+/* Alert Enhancements */
+.alert-info {
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
+}
+
+/* Utility Classes */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.bg-primary-subtle {
+    background-color: #eff6ff !important;
+}
+
+.border-primary {
+    border-color: var(--primary-color) !important;
+}

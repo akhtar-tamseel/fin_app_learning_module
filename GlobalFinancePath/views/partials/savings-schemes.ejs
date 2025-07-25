@@ -1,0 +1,149 @@
+<!-- Savings Schemes Table -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="card-title h5 mb-0">
+            <%= country.name %> - Popular Savings Schemes
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Scheme</th>
+                        <th>Tenure</th>
+                        <th>Interest Rate</th>
+                        <th>Key Features</th>
+                        <th>Tax Benefits</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (schemes && schemes.length > 0) { %>
+                        <% schemes.forEach(function(scheme) { %>
+                            <% if (!searchQuery || 
+                                   scheme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                   (scheme.keyFeatures && scheme.keyFeatures.some(feature => feature.toLowerCase().includes(searchQuery.toLowerCase())))) { %>
+                                <tr>
+                                    <td>
+                                        <div class="fw-medium"><%= scheme.name %></div>
+                                        <% if (scheme.eligibility) { %>
+                                            <small class="text-muted"><%= scheme.eligibility %></small>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <span class="badge tenure-badge <%= scheme.tenure.includes('15') || scheme.tenure.includes('21') || scheme.tenure.includes('Until') ? 'bg-primary' : scheme.tenure.includes('5') ? 'bg-success' : 'bg-warning' %>">
+                                            <%= scheme.tenure %>
+                                        </span>
+                                    </td>
+                                    <td class="fw-medium"><%= scheme.interestRate %></td>
+                                    <td>
+                                        <% if (scheme.keyFeatures && scheme.keyFeatures.length > 0) { %>
+                                            <% scheme.keyFeatures.slice(0, 2).forEach(function(feature) { %>
+                                                <div class="small">• <%= feature %></div>
+                                            <% }); %>
+                                            <% if (scheme.keyFeatures.length > 2) { %>
+                                                <small class="text-muted">+<%= scheme.keyFeatures.length - 2 %> more</small>
+                                            <% } %>
+                                        <% } %>
+                                    </td>
+                                    <td><%= scheme.taxBenefits || 'None' %></td>
+                                </tr>
+                            <% } %>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <i class="fas fa-piggy-bank fs-1 text-muted mb-3 d-block"></i>
+                                <h5 class="text-muted">No savings schemes found</h5>
+                                <p class="text-muted">Try adjusting your search terms or select a different country.</p>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Calculator -->
+<div class="card">
+    <div class="card-header">
+        <h4 class="card-title h6 mb-0">Scheme Comparison Calculator</h4>
+    </div>
+    <div class="card-body">
+        <form id="calculatorForm" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label for="investment-amount" class="form-label">Investment Amount (<%= country.currencySymbol %>)</label>
+                <input type="number" class="form-control" id="investment-amount" placeholder="150000">
+            </div>
+            <div class="col-md-4">
+                <label for="investment-period" class="form-label">Investment Period (Years)</label>
+                <select class="form-select" id="investment-period">
+                    <option value="">Select period</option>
+                    <option value="5">5 years</option>
+                    <option value="10">10 years</option>
+                    <option value="15">15 years</option>
+                    <option value="20">20+ years</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="risk-appetite" class="form-label">Risk Appetite</label>
+                <select class="form-select" id="risk-appetite">
+                    <option value="">Select risk level</option>
+                    <option value="conservative">Conservative</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="aggressive">Aggressive</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="button" class="btn btn-primary" onclick="calculateRecommendations()">
+                    <i class="fas fa-calculator me-2"></i>Calculate Best Options
+                </button>
+            </div>
+        </form>
+        
+        <div id="calculatorResults" class="d-none">
+            <div class="alert alert-info">
+                <h6 class="fw-bold mb-3">Recommended Schemes</h6>
+                <div id="recommendedSchemes">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateRecommendations() {
+    const amount = document.getElementById('investment-amount').value;
+    const period = document.getElementById('investment-period').value;
+    const risk = document.getElementById('risk-appetite').value;
+    
+    if (amount && period && risk) {
+        const resultsDiv = document.getElementById('calculatorResults');
+        const schemesDiv = document.getElementById('recommendedSchemes');
+        
+        // Simple recommendation logic based on form data
+        let recommendations = [];
+        <% if (schemes && schemes.length > 0) { %>
+            <% schemes.slice(0, 3).forEach(function(scheme) { %>
+                recommendations.push({
+                    name: '<%= scheme.name %>',
+                    rate: '<%= scheme.interestRate %>'
+                });
+            <% }); %>
+        <% } %>
+        
+        schemesDiv.innerHTML = recommendations.map(scheme => 
+            `<div class="d-flex justify-content-between align-items-center p-2 bg-white rounded border mb-2">
+                <span class="fw-medium">${scheme.name}</span>
+                <span class="badge bg-outline-primary">${scheme.rate}</span>
+            </div>`
+        ).join('');
+        
+        resultsDiv.classList.remove('d-none');
+    } else {
+        alert('Please fill in all fields to calculate recommendations.');
+    }
+}
+</script>
