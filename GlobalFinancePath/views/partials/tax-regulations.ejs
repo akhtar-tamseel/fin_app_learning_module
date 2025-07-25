@@ -205,36 +205,171 @@ function selectRegime(regimeId, element) {
     // For now, we'll just keep the existing display
 }
 
-function calculateTax() {
-    const income = document.getElementById('annual-income').value;
+async function calculateTax() {
+    const income = parseFloat(document.getElementById('annual-income').value);
     const age = document.getElementById('age-group').value;
-    const investments = document.getElementById('investments').value;
+    const investments = parseFloat(document.getElementById('investments').value) || 0;
     
-    if (income) {
-        // Simple tax calculation logic (this would be more complex in real implementation)
+    if (!income || income <= 0) {
+        alert('Please enter a valid annual income to calculate tax.');
+        return;
+    }
+    
+    if (!age) {
+        alert('Please select your age group to calculate tax.');
+        return;
+    }
+    
+    try {
+        // Get current country code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const countryCode = urlParams.get('country') || 'IN';
+        
+        // Fetch tax regulations for the country
+        const response = await fetch(`/api/countries/${countryCode}/tax`);
+        const regulations = await response.json();
+        
+        if (!regulations || regulations.length === 0) {
+            alert('Tax regulations not available for this country.');
+            return;
+        }
+        
+        // Calculate tax for both regimes if available
+        let newRegimeTax = 0;
+        let oldRegimeTax = 0;
+        
+        const newRegime = regulations.find(r => r.regime === 'New');
+        const oldRegime = regulations.find(r => r.regime === 'Old');
+        
+        if (newRegime) {
+            newRegimeTax = calculateRegimeTax(income, age, investments, newRegime, false);
+        }
+        
+        if (oldRegime) {
+            oldRegimeTax = calculateRegimeTax(income, age, investments, oldRegime, true);
+        }
+        
+        // Display results
         const resultsDiv = document.getElementById('taxResults');
+        const currencySymbol = '<%= country.currencySymbol %>';
+        
+        // Format numbers with commas
+        document.getElementById('newRegimeTax').textContent = currencySymbol + newRegimeTax.toLocaleString('en-IN');
+        document.getElementById('oldRegimeTax').textContent = currencySymbol + oldRegimeTax.toLocaleString('en-IN');
+        
+        const savings = oldRegimeTax - newRegimeTax;
+        const savingsAmount = Math.abs(savings);
+        
+        document.getElementById('taxSavings').textContent = currencySymbol + savingsAmount.toLocaleString('en-IN');
+        
+        // Update savings text and styling based on which regime is better
+        const savingsDiv = document.getElementById('taxSavings').nextElementSibling;
+        const savingsElement = document.getElementById('taxSavings');
+        
+        if (savings > 0) {
+            savingsDiv.textContent = 'Savings (New Regime Better)';
+            savingsElement.className = 'fs-4 fw-bold text-success';
+        } else if (savings < 0) {
+            savingsDiv.textContent = 'Savings (Old Regime Better)';
+            savingsElement.className = 'fs-4 fw-bold text-success';
+        } else {
+            savingsDiv.textContent = 'Same Tax in Both Regimes';
+            savingsElement.className = 'fs-4 fw-bold text-warning';
+        }
+        
+        // Add calculation breakdown
+        const breakdownText = createTaxBreakdown(income, investments, newRegimeTax, oldRegimeTax, newRegime, oldRegime);
+        let breakdownDiv = document.getElementById('taxBreakdown');
+        if (!breakdownDiv) {
+            breakdownDiv = document.createElement('div');
+            breakdownDiv.id = 'taxBreakdown';
+            breakdownDiv.className = 'mt-3 small text-muted';
+            resultsDiv.appendChild(breakdownDiv);
+        }
+        breakdownDiv.innerHTML = breakdownText;
+        
         resultsDiv.classList.remove('d-none');
         
-        // You could add more sophisticated calculation logic here
-        // For now, we're showing placeholder values
-    } else {
-        alert('Please enter your annual income to calculate tax.');
+    } catch (error) {
+        console.error('Error calculating tax:', error);
+        alert('Error calculating tax. Please try again.');
     }
 }
+
+function calculateRegimeTax(income, age, investments, regime, allowDeductions) {
+    let taxableIncome = income;
+    
+    // Apply deductions for old regime
+    if (allowDeductions && regime.deductions && investments > 0) {
+        // 80C deduction (investments)
+        const section80C = regime.deductions.find(d => d.section === '80C');
+        if (section80C) {
+            const maxDeduction = 150000; // ₹1,50,000
+            taxableIncome -= Math.min(investments, maxDeduction);
+        }
+    }
+    
+    // Calculate tax based on slabs - no age-based exemption needed as it's in the slabs
+    let tax = 0;
+    
+    if (regime.taxSlabs) {
+        for (const slab of regime.taxSlabs) {
+            const rate = parseFloat(slab.rate.replace('%', '')) / 100;
+            
+            if (rate === 0) continue; // Skip 0% slabs
+            
+            // Parse slab ranges
+            let lowerLimit = 0;
+            let upperLimit = 0;
+            
+            if (slab.range.includes('Above')) {
+                // Handle "Above ₹24,00,000" format
+                const match = slab.range.match(/₹([\d,]+)/);
+                if (match) {
+                    lowerLimit = parseFloat(match[1].replace(/,/g, ''));
+                    upperLimit = Infinity;
+                }
+            } else {
+                // Handle "₹4,00,001 - ₹8,00,000" format
+                const matches = slab.range.match(/₹([\d,]+)/g);
+                if (matches && matches.length >= 2) {
+                    lowerLimit = parseFloat(matches[0].replace(/[₹,]/g, ''));
+                    upperLimit = parseFloat(matches[1].replace(/[₹,]/g, ''));
+                }
+            }
+            
+            // Calculate tax for this slab
+            if (taxableIncome > lowerLimit) {
+                const taxableInThisSlab = Math.min(taxableIncome - lowerLimit, upperLimit - lowerLimit);
+                tax += taxableInThisSlab * rate;
+            }
+        }
+    }
+    
+    // Add Health and Education Cess (4% of tax)
+    if (tax > 0) {
+        tax = tax * 1.04;
+    }
+    
+    return Math.round(tax);
+}
+
+function createTaxBreakdown(income, investments, newRegimeTax, oldRegimeTax, newRegime, oldRegime) {
+    let breakdown = '<strong>Tax Calculation Summary:</strong><br>';
+    breakdown += `Annual Income: ₹${income.toLocaleString('en-IN')}<br>`;
+    
+    if (investments > 0) {
+        breakdown += `Investment Deductions (80C): ₹${Math.min(investments, 150000).toLocaleString('en-IN')}<br>`;
+    }
+    
+    breakdown += '<br><strong>Tax Comparison:</strong><br>';
+    breakdown += `• New Regime: ₹${newRegimeTax.toLocaleString('en-IN')} (${newRegime ? 'Higher exemption limit ₹4,00,000' : 'N/A'})<br>`;
+    breakdown += `• Old Regime: ₹${oldRegimeTax.toLocaleString('en-IN')} (${oldRegime ? 'With deductions available' : 'N/A'})<br>`;
+    
+    const better = newRegimeTax < oldRegimeTax ? 'New Regime' : 'Old Regime';
+    const difference = Math.abs(newRegimeTax - oldRegimeTax);
+    breakdown += `<br><strong>Recommendation:</strong> Choose ${better} to save ₹${difference.toLocaleString('en-IN')}`;
+    
+    return breakdown;
+}
 </script>
-
-<style>
-.tax-regime-card {
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.tax-regime-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.tax-rate-badge.bg-orange {
-    background-color: #fd7e14 !important;
-}
-</style>
